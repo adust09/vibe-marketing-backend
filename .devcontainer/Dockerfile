@@ -22,13 +22,7 @@ RUN go install github.com/cosmtrek/air@v1.49.0 && \
 # Set up workspace
 WORKDIR /workspace
 
-# Create non-root user
-ARG USERNAME=vscode
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
+# Fix permissions for Go directory
+RUN chown -R vscode:vscode /go
 
-RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
-    && chown -R $USERNAME:$USERNAME /go
-
-USER $USERNAME
+USER vscode
