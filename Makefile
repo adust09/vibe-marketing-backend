@@ -5,14 +5,14 @@ dev:
 	air
 
 run:
-	go run cmd/server/main.go
+	go run server/main.go
 
 # Build
 build:
-	go build -o bin/server cmd/server/main.go
+	go build -o bin/server server/main.go
 
 build-linux:
-	GOOS=linux GOARCH=amd64 go build -o bin/server-linux cmd/server/main.go
+	GOOS=linux GOARCH=amd64 go build -o bin/server-linux server/main.go
 
 # Testing
 test:
@@ -66,7 +66,7 @@ mock:
 	mockgen -source=internal/repositories/interfaces.go -destination=tests/mocks/repositories.go
 
 swagger:
-	swag init -g cmd/server/main.go -o api/
+	swag init -g server/main.go -o api/
 
 # Dependencies
 deps:

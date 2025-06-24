@@ -9,6 +9,8 @@ import (
 	"ads-backend/internal/routes"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 // @title Ads Backend API
@@ -34,6 +36,12 @@ import (
 func main() {
 	// Load configuration
 	cfg := config.Load()
+	
+	// Initialize database
+	db, err := gorm.Open(postgres.Open(cfg.Database.URL), &gorm.Config{})
+	if err != nil {
+		log.Fatal("Failed to connect to database:", err)
+	}
 
 	// Set Gin mode based on environment
 	if cfg.Server.Env == "production" {
@@ -60,7 +68,7 @@ func main() {
 
 	// API v1 routes
 	v1 := router.Group("/api/v1")
-	routes.SetupRoutes(v1)
+	routes.SetupRoutes(v1, db, cfg)
 
 	// Swagger documentation
 	// router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
