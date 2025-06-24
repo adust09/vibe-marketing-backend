@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"ads-backend/internal/config"
+	"ads-backend/internal/database"
 	"ads-backend/internal/middleware"
 	"ads-backend/internal/routes"
 
@@ -35,6 +36,14 @@ func main() {
 	// Load configuration
 	cfg := config.Load()
 
+	// Initialize database
+	db := database.Connect(cfg)
+
+	// Run auto migrations
+	if err := database.AutoMigrate(db); err != nil {
+		log.Fatal("Failed to run database migrations:", err)
+	}
+
 	// Set Gin mode based on environment
 	if cfg.Server.Env == "production" {
 		gin.SetMode(gin.ReleaseMode)
@@ -60,7 +69,7 @@ func main() {
 
 	// API v1 routes
 	v1 := router.Group("/api/v1")
-	routes.SetupRoutes(v1)
+	routes.SetupRoutes(v1, db, cfg)
 
 	// Swagger documentation
 	// router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

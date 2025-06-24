@@ -44,26 +44,28 @@ This is a Google Ads AI Platform API backend built in Go with clean architecture
 
 ### Project Structure
 ```
-server/main.go              # Application entry point
+server/main.go              # Application entry point with database initialization
 api/internal/
 ├── config/                 # Environment configuration
-├── models/                 # Data models (User, Campaign, AdGroup)
+├── database/               # Database connection and setup
+├── models/                 # Data models (User, Campaign, AdGroup, Keyword)
 ├── middleware/             # HTTP middleware (CORS, security, auth)
-├── routes/                 # Route definitions
-├── controllers/            # HTTP handlers (empty - needs implementation)
-├── services/               # Business logic (empty - needs implementation)
-├── repositories/           # Data access layer (empty - needs implementation)
+├── routes/                 # Route definitions with CPC endpoints
+├── controllers/            # HTTP handlers for CPC operations
+├── services/               # Business logic with Google Ads integration
+├── repositories/           # Data access layer with CRUD operations
 ├── validators/             # Input validation (empty - needs implementation)
 └── utils/                  # JWT and response helpers
-pkg/migrations/             # Database migrations
+pkg/migrations/             # Database migrations including CPC fields
 server/tests/               # Test organization with fixtures, mocks, helpers
 ```
 
 ### Data Models
 - **BaseModel**: UUID-based entities with soft deletes and timestamps
 - **User**: Authentication with Google Ads customer ID integration
-- **Campaign**: Budget management with JSON target audience and Google Ads mapping
-- **AdGroup**: Campaign subdivision for targeting
+- **Campaign**: Budget management with JSON target audience, Google Ads mapping, and CPC tracking (cpc, average_cpc, max_cpc)
+- **AdGroup**: Campaign subdivision for targeting with CPC metrics
+- **Keyword**: Keyword-level tracking with CPC, quality score, impressions, clicks, and cost data
 - **Analytics**: Performance metrics structure (defined but not implemented)
 
 ## Configuration
@@ -82,23 +84,29 @@ Copy `.env.example` to `.env` and configure before development.
 ## Development Notes
 
 ### Current Implementation Status
-- ✅ **Complete**: Project structure, database models, migrations, authentication middleware, Docker setup
-- ⚠️ **Partial**: Route structure exists but most endpoints commented out, middleware implemented but auth may need completion
-- ❌ **Missing**: Controllers, services, repositories, validators, WebSocket handlers, Google API integrations, background jobs
+- ✅ **Complete**: Project structure, database models with CPC fields, migrations, authentication middleware, Docker setup, CPC API endpoints
+- ✅ **Complete**: Controllers, services, repositories for Campaign/AdGroup/Keyword management
+- ✅ **Complete**: Google Ads API service foundation with mock data
+- ⚠️ **Partial**: Google Ads API actual integration (foundation ready), middleware implemented but auth may need completion
+- ❌ **Missing**: Validators, WebSocket handlers, full Google API integrations, background jobs
 
 ### Key Entry Points
-- `server/main.go` - Application startup and middleware setup
-- `api/internal/routes/routes.go` - API routing configuration
-- `api/internal/models/` - Database models and relationships
-- `pkg/migrations/` - Database schema definitions
+- `server/main.go` - Application startup with database initialization and middleware setup
+- `api/internal/routes/routes.go` - API routing configuration with CPC endpoints
+- `api/internal/models/` - Database models and relationships including CPC fields
+- `api/internal/controllers/` - HTTP handlers for Campaign, AdGroup, and Keyword operations
+- `api/internal/services/` - Business logic with Google Ads API integration
+- `api/internal/repositories/` - Data access layer with CRUD operations
+- `pkg/migrations/` - Database schema definitions including CPC tables
 
 ### Testing Strategy
 The codebase has comprehensive test structure:
-- Unit tests in `server/tests/unit/`
+- Unit tests in `server/tests/unit/` with CPC service tests implemented
 - Integration tests in `server/tests/integration/`
 - Test fixtures in `server/tests/fixtures/`
 - Mock implementations in `server/tests/mocks/`
 - Test helpers in `server/tests/helpers/`
+- Mock repositories and Google Ads service for isolated testing
 
 Always run `make lint` and `make test` before committing changes.
 
@@ -127,3 +135,47 @@ import "ads-backend/internal/models"
 ```
 
 The correct server entry point is `server/main.go`, not `cmd/server/main.go` as mentioned in some documentation.
+
+## CPC (Cost Per Click) API Endpoints
+
+### Campaign CPC Management
+- `GET /api/v1/campaigns` - Get all campaigns with CPC data
+- `GET /api/v1/campaigns/:id` - Get specific campaign with CPC metrics
+- `PUT /api/v1/campaigns/:id/cpc` - Update campaign CPC values manually
+- `POST /api/v1/campaigns/:id/refresh-cpc` - Refresh CPC data from Google Ads API
+
+### AdGroup CPC Management
+- `GET /api/v1/campaigns/:campaign_id/adgroups` - Get ad groups for a campaign
+- `GET /api/v1/adgroups/:id` - Get specific ad group with CPC metrics
+- `PUT /api/v1/adgroups/:id/cpc` - Update ad group CPC values manually
+- `POST /api/v1/adgroups/:id/refresh-cpc` - Refresh CPC data from Google Ads API
+
+### Keyword CPC Management
+- `GET /api/v1/adgroups/:adgroup_id/keywords` - Get keywords for an ad group
+- `GET /api/v1/keywords/:id` - Get specific keyword with full metrics (CPC, quality score, impressions, clicks, cost)
+- `PUT /api/v1/keywords/:id/cpc` - Update keyword CPC values manually
+- `POST /api/v1/keywords/:id/refresh-cpc` - Refresh keyword data from Google Ads API
+
+### CPC Data Structure
+All CPC endpoints return the following fields:
+- `cpc` - Current cost per click (decimal)
+- `average_cpc` - Average cost per click over time period (decimal)
+- `max_cpc` - Maximum bid for cost per click (decimal)
+
+Keywords additionally include:
+- `quality_score` - Google Ads quality score (1-10)
+- `impressions` - Total impressions count
+- `clicks` - Total clicks count
+- `cost` - Total cost spent
+
+### Google Ads Integration
+The system includes a `GoogleAdsService` that handles:
+- Authentication with Google Ads API
+- Fetching real-time CPC data
+- Updating local database with fresh metrics
+- Error handling and retry logic
+
+Current implementation uses mock data for development. To enable real Google Ads integration:
+1. Configure `GOOGLE_ADS_DEVELOPER_TOKEN` in environment
+2. Set up OAuth2 credentials in `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`
+3. Implement actual API calls in `api/internal/services/google_ads_service.go`
