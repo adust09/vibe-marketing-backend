@@ -1,0 +1,4 @@
+ALTER TABLE campaigns 
+ADD COLUMN cpc DECIMAL(10,4),
+ADD COLUMN average_cpc DECIMAL(10,4),
+ADD COLUMN max_cpc DECIMAL(10,4);

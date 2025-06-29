@@ -21,6 +21,9 @@ type Campaign struct {
 	TargetAudience      datatypes.JSON      `json:"target_audience"`
 	GoogleAdsCampaignID *string             `json:"google_ads_campaign_id"`
 	Platform            string              `gorm:"default:google" json:"platform"`
+	CPC                 *decimal.Decimal    `gorm:"type:decimal(10,4)" json:"cpc"`
+	AverageCPC          *decimal.Decimal    `gorm:"type:decimal(10,4)" json:"average_cpc"`
+	MaxCPC              *decimal.Decimal    `gorm:"type:decimal(10,4)" json:"max_cpc"`
 	User                User                `gorm:"foreignKey:UserID" json:"user,omitempty"`
 	AdGroups            []AdGroup           `gorm:"foreignKey:CampaignID" json:"ad_groups,omitempty"`
 	Analytics           []CampaignAnalytics `gorm:"foreignKey:CampaignID" json:"analytics,omitempty"`

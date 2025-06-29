@@ -1,0 +1,4 @@
+ALTER TABLE campaigns 
+DROP COLUMN IF EXISTS cpc,
+DROP COLUMN IF EXISTS average_cpc,
+DROP COLUMN IF EXISTS max_cpc;
